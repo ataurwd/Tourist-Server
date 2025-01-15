@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 7000;
 
 app.use(express.json());
 app.use(cors());
@@ -49,9 +49,20 @@ async function run() {
         
         // to get all user data
         app.get('/users', async (req, res) => { 
-            const result = await userCollection.find().toArray();
-            res.send(result)
+        const result = await userCollection.find().toArray();
+        res.send(result)
         })
+      
+      // to find a spacified user base on email
+      app.get('/user/:email', async (req, res) => { 
+        const mainEmail = req.params.email;
+        const query = { email: mainEmail }
+        const result = await userCollection.find(query).toArray();
+        res.send(result)
+      })
+      
+      // to update a single user
+
       
       
       // to post tourst add stories
@@ -69,20 +80,64 @@ async function run() {
       
       // to get a single story
       app.get('/story/:id', async (req, res) => { 
-        const id = ObjectId(req.params.id);
+        const id = new ObjectId(req.params.id);
         const result = await touristStory.findOne({_id: id});
         res.send(result)
       })
       
-      // to update a story
-      app.put('/story/:id', async (req, res) => { 
-        const id = ObjectId(req.params.id);
-        const updatedStory = req.body;
-        const result = await touristStory.updateOne({_id: id}, {$set: updatedStory});
+
+      // to update a single story
+      app.patch('/update/:id', async (req, res) => {
+        const id = req.params.id;
+        const { title, storyText, removeImages, addImages } = req.body;
+      
+        try {
+          const update = {};
+          if (title) update.title = title;
+      
+          if (storyText) update.storyText = storyText;
+      
+          if (removeImages && removeImages.length > 0) {
+            await touristStory.updateOne(
+              { _id: new ObjectId(id) },
+              { $pull: { images: { $in: removeImages } } }
+            );
+          }
+      
+          if (addImages && addImages.length > 0) {
+            await touristStory.updateOne(
+              { _id: new ObjectId(id) },
+              { $push: { images: { $each: addImages } } }
+            );
+          }
+      
+          if (Object.keys(update).length > 0) {
+            await touristStory.updateOne(
+              { _id: new ObjectId(id) },
+              { $set: update }
+            );
+          }
+      
+          const updatedStory = await touristStory.findOne({ _id: new ObjectId(id) });
+          res.send(updatedStory);
+      
+        } catch (error) {
+          console.error('Error updating story:', error);
+          res.status(500).send({ error });
+        }
+      });
+      
+      
+      
+      
+      // to delete a story
+      app.delete('/story/:id', async (req, res) => { 
+        const id = new ObjectId(req.params.id);
+        const result = await touristStory.deleteOne({_id: id});
         res.send(result)
       })
       
-      // to delete a story
+    } catch (error) {
         
   } finally {
   }
