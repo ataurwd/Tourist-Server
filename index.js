@@ -34,6 +34,7 @@ async function run() {
         
         const userCollection = client.db('tourists').collection('users');
         const touristStory = client.db('tourists').collection('touristStory');
+        const guideCollection = client.db('tourists').collection('guide');
         
         //  to save user data
         app.post('/user', async (req, res) => { 
@@ -127,15 +128,26 @@ async function run() {
         }
       });
       
-      
-      
-      
       // to delete a story
       app.delete('/story/:id', async (req, res) => { 
         const id = new ObjectId(req.params.id);
         const result = await touristStory.deleteOne({_id: id});
         res.send(result)
       })
+
+      // to post the join as a guild data
+      app.post('/guide', async (req, res,) => {
+        const guide = req.body;
+        const result = await guideCollection.insertOne(guide)
+        res.send(result)
+      })
+
+      // to get all guild data
+      app.get('/guides', async (req, res) => { 
+        const result = await guideCollection.find().toArray();
+        res.send(result)
+      })
+      
       
     } catch (error) {
         
