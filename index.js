@@ -33,6 +33,7 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
         
         const userCollection = client.db('tourists').collection('users');
+        const touristStory = client.db('tourists').collection('touristStory');
         
         //  to save user data
         app.post('/user', async (req, res) => { 
@@ -51,6 +52,37 @@ async function run() {
             const result = await userCollection.find().toArray();
             res.send(result)
         })
+      
+      
+      // to post tourst add stories
+      app.post('/add-stories', async (req, res) => { 
+        const story = req.body;
+        const result = await touristStory.insertOne(story);
+        res.send(result)
+      })
+
+      // to get tourist story
+      app.get('/stories', async (req, res) => { 
+        const result = await touristStory.find().toArray();
+        res.send(result)
+      })
+      
+      // to get a single story
+      app.get('/story/:id', async (req, res) => { 
+        const id = ObjectId(req.params.id);
+        const result = await touristStory.findOne({_id: id});
+        res.send(result)
+      })
+      
+      // to update a story
+      app.put('/story/:id', async (req, res) => { 
+        const id = ObjectId(req.params.id);
+        const updatedStory = req.body;
+        const result = await touristStory.updateOne({_id: id}, {$set: updatedStory});
+        res.send(result)
+      })
+      
+      // to delete a story
         
   } finally {
   }
