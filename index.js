@@ -145,6 +145,11 @@ async function run() {
       // to post the join as a guild data
       app.post('/guide', async (req, res,) => {
         const guide = req.body;
+        const { email } = guide;
+        const isExist = await guideCollection.findOne({ email })
+        if (isExist) {
+            return res.status(409).send({ message: "User already exists" });
+        }
         const result = await guideCollection.insertOne(guide)
         res.send(result)
       })
@@ -155,6 +160,23 @@ async function run() {
         res.send(result)
       })
       
+
+// Update the role from tourist to guide
+app.patch('/update-guide/:id', async (req, res) => {
+  const id = req.params.id;
+
+  await userCollection.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { role: "guide" } }
+  );
+
+  // to delete the user from the guide
+  await guideCollection.deleteOne({ _id: new ObjectId(id) });
+
+  const updatedUser = await userCollection.findOne({ _id: new ObjectId(id) });
+  res.send(updatedUser);
+});
+
       
     } catch (error) {
         
