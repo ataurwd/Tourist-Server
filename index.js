@@ -162,20 +162,31 @@ async function run() {
       
 
 // Update the role from tourist to guide
-app.patch('/update-guide/:id', async (req, res) => {
-  const id = req.params.id;
+app.patch('/update-guide/:email', async (req, res) => {
+  const email = req.params.email;
 
   await userCollection.updateOne(
-    { _id: new ObjectId(id) },
+    { email },
     { $set: { role: "guide" } }
   );
 
-  // to delete the user from the guide
-  await guideCollection.deleteOne({ _id: new ObjectId(id) });
+  // to delete the guide from the guide collection
+  await guideCollection.deleteOne({ email });
 
-  const updatedUser = await userCollection.findOne({ _id: new ObjectId(id) });
+  const updatedUser = await userCollection.findOne({ email });
   res.send(updatedUser);
 });
+      
+      
+      // to delete candidata item
+app.delete('/guide/:id', async (req, res) => { 
+  const id = new ObjectId(req.params.id);
+  const result = await guideCollection.deleteOne({_id: id});
+  res.send(result)
+})
+      
+
+
 
       
     } catch (error) {
