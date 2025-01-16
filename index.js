@@ -193,9 +193,12 @@ app.delete('/guide/:id', async (req, res) => {
         res.send(result)
       })
       
-
-
-
+      // to get all package item
+      app.get('/packages', async (req, res) => { 
+        const result = await packageCollection.find().toArray();
+        res.send(result)
+      })
+    
       
     } catch (error) {
         
