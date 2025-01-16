@@ -35,6 +35,7 @@ async function run() {
         const userCollection = client.db('tourists').collection('users');
         const touristStory = client.db('tourists').collection('touristStory');
         const guideCollection = client.db('tourists').collection('guide');
+        const packageCollection = client.db('tourists').collection('package');
         
         //  to save user data
         app.post('/user', async (req, res) => { 
@@ -184,6 +185,13 @@ app.delete('/guide/:id', async (req, res) => {
   const result = await guideCollection.deleteOne({_id: id});
   res.send(result)
 })
+      
+      // to post add package item
+      app.post('/add-package', async (req, res) => { 
+        const packageItem = req.body;
+        const result = await packageCollection.insertOne(packageItem);
+        res.send(result)
+      })
       
 
 
