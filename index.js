@@ -78,6 +78,13 @@ async function run() {
         const result = await touristStory.find().toArray();
         res.send(result)
       })
+
+      app.get('/storie/:email', async (req, res) => { 
+        const mainEmail = req.params.email;
+        const query = { email: mainEmail }
+        const result = await touristStory.find(query).toArray();
+        res.send(result)
+      })
       
       // to get a single story
       app.get('/story/:id', async (req, res) => { 
