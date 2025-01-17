@@ -194,11 +194,31 @@ app.delete('/guide/:id', async (req, res) => {
       })
       
       // to get all package item
-      app.get('/packages', async (req, res) => { 
-        const result = await packageCollection.find().toArray();
+      app.get('/packages', async (req, res) => {
+        try {
+          const result = await packageCollection.aggregate([{ $sample: { size: 3 } }]).toArray();
+          res.send(result);
+        } catch (error) {
+          console.error("Error fetching random packages:", error);
+          res.status(500).send({ message: "Internal Server Error" });
+        }
+      });
+
+      // to get normally all packages
+      app.get('/packages/all', async (req, res) => {
+          const result = await packageCollection.find().toArray();
+          res.send(result);
+      });
+      
+      // to get a single package item
+      app.get('/package/:id', async (req, res) => { 
+        const id = new ObjectId(req.params.id);
+        const result = await packageCollection.findOne({_id: id});
         res.send(result)
       })
-    
+      
+      // to update a single package item
+      
       
     } catch (error) {
         
