@@ -36,6 +36,7 @@ async function run() {
         const touristStory = client.db('tourists').collection('touristStory');
         const guideCollection = client.db('tourists').collection('guide');
         const packageCollection = client.db('tourists').collection('package');
+        const guideBooking = client.db('tourists').collection('guideBooking');
         
         //  to save user data
         app.post('/user', async (req, res) => { 
@@ -223,7 +224,44 @@ app.delete('/guide/:id', async (req, res) => {
         res.send(result)
       })
       
-      // to update a single package item
+      // to post the guide booking data
+      app.post('/guide-booking', async (req, res) => { 
+        const booking = req.body
+        const result = await guideBooking.insertOne(booking);
+        res.send(result)
+      })
+      
+      // to get all guide booking data
+      app.get('/guide-bookings', async (req, res) => { 
+        const result = await guideBooking.find().toArray();
+        res.send(result)
+      })
+      
+      // to get a single guide booking data
+      app.get('/guide-booking/:email', async (req, res) => { 
+        const userEmail = req.params.email;
+        const query = {email: userEmail}
+        const result = await guideBooking.find(query).toArray();
+        res.send(result)
+      })
+
+      // to update the status of the guide booking
+      app.patch('/update-booking-status/:id', async (req, res) => {
+        const id = req.params.id;
+        const { statas } = req.body;
+      
+          await guideBooking.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { statas: 'rejected ' } }
+          );
+      
+          const updatedBooking = await guideBooking.findOne({ _id: new ObjectId(id) });
+          res.send(updatedBooking);
+      
+      });
+      
+      // to delete a guide booking data
+
       
       
     } catch (error) {
