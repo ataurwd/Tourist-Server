@@ -63,7 +63,13 @@ async function run() {
         res.send(result)
       })
       
-      // to update a single user
+      // get user by id
+      app.get('/users/:id', async (req, res) => { 
+        const id = new ObjectId(req.params.id);
+        const result = await userCollection.findOne({_id: id});
+        res.send(result)
+      })
+  
 
       
       
