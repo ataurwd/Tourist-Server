@@ -52,7 +52,9 @@ async function run() {
             res.send(result)
         })
         
-        // to get all user data
+      // to get all user data
+      // const result = await packageCollection.aggregate([{ $sample: { size: 3 } }]).toArray();
+
         app.get('/users', async (req, res) => { 
         const result = await userCollection.find().toArray();
         res.send(result)
@@ -73,9 +75,15 @@ async function run() {
         res.send(result)
       })
   
-
-      
-      
+      // to get all guides
+      app.get('/all-guides', async (req, res) => {
+            const result = await userCollection.aggregate([
+                { $match: { role: "guide" } }, 
+                { $sample: { size: 6 } }      
+            ]).toArray();
+            res.send(result);
+    });
+    
       // to post tourst add stories
       app.post('/add-stories', async (req, res) => { 
         const story = req.body;
@@ -253,6 +261,13 @@ app.delete('/guide/:id', async (req, res) => {
         const result = await guideBooking.findOne({_id: id});
         res.send(result)
       })
+
+      // to delete booking data
+      app.delete('/guide-booking/:id', async (req, res) => { 
+        const id = new ObjectId(req.params.id);
+        const result = await guideBooking.deleteOne({_id: id});
+        res.send(result)
+      })
       
 
       // to update the status of the guide booking
@@ -262,7 +277,7 @@ app.delete('/guide/:id', async (req, res) => {
       
           await guideBooking.updateOne(
             { _id: new ObjectId(id) },
-            { $set: { statas: 'rejected ' } }
+            { $set: { statas: 'rejected' } }
           );
       
           const updatedBooking = await guideBooking.findOne({ _id: new ObjectId(id) });
