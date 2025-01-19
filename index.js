@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe = require('stripe')(process.env.STRIP_SECRATE_KEY)
 const app = express();
 const port = process.env.PORT || 7000;
 
@@ -37,6 +38,7 @@ async function run() {
         const guideCollection = client.db('tourists').collection('guide');
         const packageCollection = client.db('tourists').collection('package');
         const guideBooking = client.db('tourists').collection('guideBooking');
+        const paymentCollection = client.db('tourists').collection('payment');
         
         //  to save user data
         app.post('/user', async (req, res) => { 
@@ -245,8 +247,16 @@ app.delete('/guide/:id', async (req, res) => {
         res.send(result)
       })
 
+      // to get a single guide booking data by id
+      app.get('/guide-bookings/:id', async (req, res) => { 
+        const id = new ObjectId(req.params.id);
+        const result = await guideBooking.findOne({_id: id});
+        res.send(result)
+      })
+      
+
       // to update the status of the guide booking
-      app.patch('/update-booking-status/:id', async (req, res) => {
+      app.patch('/update-status/:id', async (req, res) => {
         const id = req.params.id;
         const { statas } = req.body;
       
@@ -257,11 +267,84 @@ app.delete('/guide/:id', async (req, res) => {
       
           const updatedBooking = await guideBooking.findOne({ _id: new ObjectId(id) });
           res.send(updatedBooking);
+      });
+
+      // to update the accepted 
+      app.patch('/update-accepted/:id', async (req, res) => {
+        const id = req.params.id;
+        const { statas } = req.body;
+      
+          await guideBooking.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { statas: "accepted" } }
+          );
+      
+          const updatedBooking = await guideBooking.findOne({ _id: new ObjectId(id) });
+          res.send(updatedBooking);
+      });
+      
+          // strip payment information
+    app.post('/stripe-payment', async (req, res) => { 
+      const { price } = req.body
+      const amount = parseInt(price * 100);
+      console.log( 'payment ammount',amount)
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
+      
+      // to store the payment information
+      app.post('/payment', async (req, res,) => {
+        const payment = req.body;
+        const result = await paymentCollection.insertOne(payment)
+
+        // to change the status 
+        res.send(result)
+      })
+
+      // to get all payment information
+      app.get('/payments', async (req, res) => { 
+        const result = await paymentCollection.find().toArray();
+        res.send(result)
+      })
+      
+      // to get a single payment information
+      app.get('/payment/:id', async (req, res) => { 
+        const id = new ObjectId(req.params.id);
+        const result = await paymentCollection.findOne({_id: id});
+        res.send(result)
+      })
+
+      // to update the statas
+      app.patch('/update-guide-status/:id', async (req, res) => {
+        const id = req.params.id;
+        const { statas } = req.body;
+      
+          await guideBooking.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { statas: 'in-review' } }
+          );
+      
+          const updatedPayment = await guideBooking.findOne({ _id: new ObjectId(id) });
+          res.send(updatedPayment);
       
       });
       
-      // to delete a guide booking data
-
+      // to get all guides for a specific package
+      app.get('/package-guides/:id', async (req, res) => { 
+        const id = new ObjectId(req.params.id);
+        const result = await guideCollection.find({ packageId: id }).toArray();
+        res.send(result)
+      })
+      
+      
+      // to get all users for a specific package
       
       
     } catch (error) {
