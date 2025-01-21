@@ -4,13 +4,16 @@ const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const stripe = require('stripe')(process.env.STRIP_SECRATE_KEY)
 const app = express();
+const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 7000;
+const jwt = require('jsonwebtoken')
 
 app.use(express.json());
-app.use(cors());
-
-
-
+app.use(cookieParser())
+app.use(cors({
+  origin: ['http://localhost:5173', ''],
+  credentials: true,
+}))
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.4jm04.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -23,6 +26,19 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+
+// to verify token
+const verifyToken = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
+
+  jwt.verify(token, process.env.SECRETE_KEY, (err, decoded) => {
+    if (err) return res.status(401).json({ message: 'Token is not valid' });
+    req.user = decoded;
+    next();
+  })
+}
 
 async function run() {
     app.get('/', (req, res) => { 
@@ -40,6 +56,35 @@ async function run() {
         const guideBooking = client.db('tourists').collection('guideBooking');
         const paymentCollection = client.db('tourists').collection('payment');
         
+      // to genarete jwt token
+      app.post('/jwt', async (req, res) => {
+        const email = req.body;
+        const token = jwt.sign(email, process.env.SECRETE_KEY, { expiresIn: '36d' })
+        res.cookie('token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production', 
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      })
+        .send({sucess: true})
+      })
+      
+         // if token invalid then logout
+         app.get('/logout', async (req, res) => {
+          try {
+            res.clearCookie('token', {
+              maxAge: 0, // Clear the cookie immediately
+              secure: process.env.NODE_ENV === 'production', // Secure cookie in production
+              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+              // If your cookie had a path or domain set, include them here
+              domain: process.env.NODE_ENV === 'production' ? 'yourdomain.com' : 'localhost',
+            }).send({ success: true });
+          } catch (error) {
+            console.error('Error clearing cookie:', error);
+            res.status(500).send({ success: false, message: 'Failed to log out' });
+          }
+        });
+        
+      
         //  to save user data
         app.post('/user', async (req, res) => { 
             const cartItem = req.body;
@@ -53,16 +98,19 @@ async function run() {
         })
         
       // to get all user data
-      // const result = await packageCollection.aggregate([{ $sample: { size: 3 } }]).toArray();
-
-        app.get('/users', async (req, res) => { 
+      app.get('/users', async (req, res) => { 
         const result = await userCollection.find().toArray();
         res.send(result)
         })
       
       // to find a spacified user base on email
-      app.get('/user/:email', async (req, res) => { 
+      app.get('/user/:email', verifyToken, async (req, res) => { 
         const mainEmail = req.params.email;
+        const decodedEmail = req.user?.email
+        if (decodedEmail !== mainEmail ){
+          return res.status(401).send('unauthorized to access this data')
+        }
+
         const query = { email: mainEmail }
         const result = await userCollection.find(query).toArray();
         res.send(result)
@@ -222,7 +270,7 @@ app.delete('/guide/:id', async (req, res) => {
       });
 
       // to get normally all packages
-      app.get('/packages/all', async (req, res) => {
+      app.get('/packages/all',verifyToken, async (req, res) => {
           const result = await packageCollection.find().toArray();
           res.send(result);
       });
@@ -358,9 +406,17 @@ app.delete('/guide/:id', async (req, res) => {
         res.send(result)
       })
       
-      
-      // to get all users for a specific package
-      
+      // to search user data by name
+      app.get('/searchName', async (req, res) => { 
+        const { search } = req.body;
+        const option = {}
+        if (search) {
+          option = {name: {$regex: search, $options: "i"}}
+        }
+
+        const result = await userCollection.find(option).toArray();
+        res.send(result)
+      })
       
     } catch (error) {
         
