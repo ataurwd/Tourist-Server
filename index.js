@@ -159,47 +159,42 @@ async function run() {
         res.send(result)
       })
       
-
+      // app.patch('/update-guide/:email', async (req, res) => {
+      //   const email = req.params.email;
+      
+      //   await userCollection.updateOne(
+      //     { email },
+      //     { $set: { role: "guide" } }
+      //   );
+      
+      //   // to delete the guide from the guide collection
+      //   await guideCollection.deleteOne({ email });
+      
+      //   const updatedUser = await userCollection.findOne({ email });
+      //   res.send(updatedUser);
+      // });
       // to update a single story
+      const { ObjectId } = require('mongodb');
+
       app.patch('/update/:id', async (req, res) => {
-        const id = req.params.id;
-        const { title, storyText, removeImages, addImages } = req.body;
+          const id = req.params.id;
+          const { title, storyText, images } = req.body;
       
-        try {
-          const update = {};
-          if (title) update.title = title;
-      
-          if (storyText) update.storyText = storyText;
-      
-          if (removeImages && removeImages.length > 0) {
-            await touristStory.updateOne(
-              { _id: new ObjectId(id) },
-              { $pull: { images: { $in: removeImages } } }
-            );
+          if (!ObjectId.isValid(id)) {
+              return res.status(400).send({ message: "Invalid story ID" });
           }
       
-          if (addImages && addImages.length > 0) {
-            await touristStory.updateOne(
+          // Update the story
+          await touristStory.updateOne(
               { _id: new ObjectId(id) },
-              { $push: { images: { $each: addImages } } }
-            );
-          }
+              { $set: { title, storyText, images } }
+          );
       
-          if (Object.keys(update).length > 0) {
-            await touristStory.updateOne(
-              { _id: new ObjectId(id) },
-              { $set: update }
-            );
-          }
-      
+          // Retrieve the updated story
           const updatedStory = await touristStory.findOne({ _id: new ObjectId(id) });
           res.send(updatedStory);
-      
-        } catch (error) {
-          console.error('Error updating story:', error);
-          res.status(500).send({ error });
-        }
       });
+      
       
       // to delete a story
       app.delete('/story/:id', async (req, res) => { 
