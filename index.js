@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken')
 app.use(express.json());
 app.use(cookieParser())
 app.use(cors({
-  origin: ['http://localhost:5173', ''],
+  origin: ['http://localhost:5173', 'https://tourism-management-1e7fd.web.app'],
   credentials: true,
 }))
 
@@ -45,8 +45,8 @@ async function run() {
         res.send('API is running...');
     })
     try {
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
+    // await client.connect();
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
         
         const userCollection = client.db('tourists').collection('users');
@@ -294,14 +294,29 @@ app.delete('/guide/:id', async (req, res) => {
         const result = await guideBooking.find().toArray();
         res.send(result)
       })
+
       
       // to get a single guide booking data
       app.get('/guide-booking/:email', async (req, res) => { 
+        const page = parseInt(req.query.page)
+        const size = parseInt(req.query.size)
         const userEmail = req.params.email;
         const query = {email: userEmail}
-        const result = await guideBooking.find(query).toArray();
+        const result = await guideBooking.find(query)
+          .skip(page * size)
+          .limit(size)
+          .toArray()
         res.send(result)
       })
+
+      // to calculate the number of pages
+      app.get('/countGuide/:email', async (req, res) => { 
+        const userEmail = req.params.email
+        const query = {email: userEmail}
+        const result = await guideBooking.countDocuments(query)
+        res.send({result})
+      })
+
 
       // to get a single guide booking data by id
       app.get('/guide-bookings/:id', async (req, res) => { 
@@ -417,6 +432,28 @@ app.delete('/guide/:id', async (req, res) => {
         const result = await userCollection.find(option).toArray();
         res.send(result)
       })
+
+
+// for pagination
+ // for pagination
+ app.get('/pagination', async (req, res) => {
+  const page = parseInt(req.query.page)
+  const size = parseInt(req.query.size)
+
+  const result = await userCollection.find()
+    .skip(page * size)
+    .limit(size)
+    .toArray();
+
+  res.send(result)
+})
+
+// for total product count
+app.get('/totalCount', async (req, res) => { 
+  const result = await userCollection.estimatedDocumentCount()
+  res.send({result})
+})
+
       
     } catch (error) {
         
