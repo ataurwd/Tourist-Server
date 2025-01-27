@@ -360,7 +360,6 @@ app.delete('/guide/:id', async (req, res) => {
     app.post('/stripe-payment', async (req, res) => { 
       const { price } = req.body
       const amount = parseInt(price * 100);
-      console.log( 'payment ammount',amount)
       const paymentIntent = await stripe.paymentIntents.create({
         amount,
         currency: 'usd',
