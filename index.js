@@ -15,6 +15,7 @@ app.use(cors({
   credentials: true,
 }))
 
+// update code
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.4jm04.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
