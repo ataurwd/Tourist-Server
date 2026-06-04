@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken')
 app.use(express.json());
 app.use(cookieParser())
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://tourism-management-1e7fd.web.app'],
+  origin: ['http://localhost:5173', 'https://tourist-book-and-mangement.vercel.app'],
   credentials: true,
 }))
 
