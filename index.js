@@ -356,19 +356,43 @@ app.delete('/guide/:id', async (req, res) => {
           res.send(updatedBooking);
       });
       
-          // strip payment information
-    app.post('/stripe-payment', async (req, res) => { 
-      const { price } = req.body
-      const amount = parseInt(price * 100);
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency: 'usd',
-        payment_method_types: ['card']
-      });
+          // stripe payment information
+    app.post('/stripe-payment', async (req, res) => {
+      try {
+        const { price, bookingId } = req.body;
+        const amount = Math.round(Number(price) * 100);
 
-      res.send({
-        clientSecret: paymentIntent.client_secret
-      })
+        if (!Number.isFinite(amount) || amount < 50) {
+          return res.status(400).send({
+            message: 'Invalid price. Amount must be at least $0.50 USD.',
+          });
+        }
+
+        const intentOptions = {
+          amount,
+          currency: 'usd',
+          payment_method_types: ['card'],
+          metadata: bookingId ? { bookingId: String(bookingId) } : {},
+        };
+
+        const requestOptions = bookingId
+          ? { idempotencyKey: `booking-${bookingId}` }
+          : undefined;
+
+        const paymentIntent = await stripe.paymentIntents.create(
+          intentOptions,
+          requestOptions
+        );
+
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      } catch (error) {
+        console.error('Stripe payment intent error:', error.message);
+        res.status(500).send({
+          message: error.message || 'Failed to create payment intent',
+        });
+      }
     })
       
       // to store the payment information
