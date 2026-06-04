@@ -11,15 +11,8 @@ const jwt = require('jsonwebtoken')
 app.use(express.json());
 app.use(cookieParser())
 
-const allowedOrigins = [
-  'http://localhost:5173',
-];
-if (process.env.NODE_ENV === 'production') {
-  allowedOrigins.push('https://tourist-book-and-mangement.vercel.app');
-}
-
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: true,
   credentials: true,
 };
 
