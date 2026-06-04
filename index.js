@@ -10,7 +10,10 @@ const jwt = require('jsonwebtoken')
 
 app.use(express.json());
 app.use(cookieParser())
-app.use(cors())
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://tourism-management-1e7fd.web.app'],
+  credentials: true,
+}))
 
 // update code
 
