@@ -5,19 +5,16 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const stripe = require('stripe')(process.env.STRIP_SECRATE_KEY)
 const app = express();
 const cookieParser = require('cookie-parser')
-const port = process.env.PORT || 7000;
+const port = process.env.PORT || 7001;
 const jwt = require('jsonwebtoken')
 
 app.use(express.json());
 app.use(cookieParser())
-app.use(cors({
-  origin: ['http://localhost:5173', 'https://tourism-management-1e7fd.web.app'],
-  credentials: true,
-}))
+app.use(cors())
 
 // update code
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.4jm04.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@practicemongodb.zhvbu.mongodb.net/?appName=PracticeMongoDB`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -46,8 +43,8 @@ async function run() {
         res.send('API is running...');
     })
     try {
-    // await client.connect();
-    // await client.db("admin").command({ ping: 1 });
+    await client.connect();
+    await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
         
         const userCollection = client.db('tourists').collection('users');
