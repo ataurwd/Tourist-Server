@@ -175,7 +175,6 @@ async function run() {
       //   res.send(updatedUser);
       // });
       // to update a single story
-      const { ObjectId } = require('mongodb');
 
       app.patch('/update/:id', async (req, res) => {
           const id = req.params.id;
@@ -418,8 +417,8 @@ app.delete('/guide/:id', async (req, res) => {
       
       // to search user data by name
       app.get('/searchName', async (req, res) => { 
-        const { search } = req.body;
-        const option = {}
+        const { search } = req.query;
+        let option = {}
         if (search) {
           option = {name: {$regex: search, $options: "i"}}
         }
