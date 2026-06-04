@@ -259,7 +259,7 @@ app.delete('/guide/:id', async (req, res) => {
       // to get all package item
       app.get('/packages', async (req, res) => {
         try {
-          const result = await packageCollection.aggregate([{ $sample: { size: 3 } }]).toArray();
+          const result = await packageCollection.find().toArray();
           res.send(result);
         } catch (error) {
           console.error("Error fetching random packages:", error);
