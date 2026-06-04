@@ -10,10 +10,21 @@ const jwt = require('jsonwebtoken')
 
 app.use(express.json());
 app.use(cookieParser())
-app.use(cors({
-  origin: ['http://localhost:5173', 'https://tourist-book-and-mangement.vercel.app'],
+
+const allowedOrigins = [
+  'http://localhost:5173',
+];
+if (process.env.NODE_ENV === 'production') {
+  allowedOrigins.push('https://tourist-book-and-mangement.vercel.app');
+}
+
+const corsOptions = {
+  origin: allowedOrigins,
   credentials: true,
-}))
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // update code
 
@@ -74,10 +85,9 @@ async function run() {
           try {
             res.clearCookie('token', {
               maxAge: 0, // Clear the cookie immediately
+              httpOnly: true,
               secure: process.env.NODE_ENV === 'production', // Secure cookie in production
               sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-              // If your cookie had a path or domain set, include them here
-              domain: process.env.NODE_ENV === 'production' ? 'yourdomain.com' : 'localhost',
             }).send({ success: true });
           } catch (error) {
             console.error('Error clearing cookie:', error);
