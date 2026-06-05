@@ -272,13 +272,42 @@ app.delete('/guide/:id', async (req, res) => {
           const result = await packageCollection.find().toArray();
           res.send(result);
       });
-      
+      // Admin: to update a package item
+      app.put('/package/:id', verifyToken, async (req, res) => {
+        try {
+          const id = new ObjectId(req.params.id);
+          const packageItem = req.body;
+          console.log("Updating package:", id, "with data:", packageItem);
+          const result = await packageCollection.updateOne(
+            { _id: id },
+            { $set: packageItem }
+          );
+          console.log("Update result:", result);
+          res.send(result);
+        } catch (error) {
+          console.error("Error updating package:", error);
+          res.status(500).send({ message: "Failed to update package", error: error.message });
+        }
+      });
+
       // to get a single package item
       app.get('/package/:id', async (req, res) => { 
         const id = new ObjectId(req.params.id);
         const result = await packageCollection.findOne({_id: id});
         res.send(result)
       })
+
+      // Admin: to delete a package item
+      app.delete('/package/:id', verifyToken, async (req, res) => {
+        try {
+          const id = new ObjectId(req.params.id);
+          const result = await packageCollection.deleteOne({ _id: id });
+          res.send(result);
+        } catch (error) {
+          console.error("Error deleting package:", error);
+          res.status(500).send({ message: "Failed to delete package" });
+        }
+      });
       
       // to post the guide booking data
       app.post('/guide-booking', async (req, res) => { 
