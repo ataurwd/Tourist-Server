@@ -36,6 +36,14 @@ io.on('connection', (socket) => {
     socket.join(roomId);
   });
 
+  socket.on('typing', (data) => {
+    socket.to(data.roomId).emit('user_typing', data.senderName);
+  });
+
+  socket.on('stop_typing', (data) => {
+    socket.to(data.roomId).emit('user_stopped_typing');
+  });
+
   socket.on('send_message', async (data) => {
     io.to(data.roomId).emit('receive_message', data);
     
