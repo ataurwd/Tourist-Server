@@ -19,6 +19,7 @@ const getCollections = () => {
     packages: db.collection('package'),
     bookings: db.collection('guideBooking'),
     payments: db.collection('payment'),
+    messages: db.collection('messages'),
   };
 };
 
