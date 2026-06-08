@@ -45,8 +45,12 @@ io.on('connection', (socket) => {
       await messageCollection.insertOne({
         roomId: data.roomId,
         sender: data.sender,
-        message: data.message,
+        senderName: data.senderName,
+        senderPhoto: data.senderPhoto,
         receiver: data.receiver,
+        receiverName: data.receiverName, // Add this
+        receiverPhoto: data.receiverPhoto, // Add this
+        message: data.message,
         timestamp: new Date(data.timestamp)
       });
     } catch (error) {
